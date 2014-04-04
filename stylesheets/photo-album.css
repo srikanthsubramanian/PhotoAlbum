@@ -1,0 +1,28 @@
+.theme-photo{
+    text-align: center;
+    padding: 2%;
+}
+
+.theme-photo-header{
+    text-align: center;
+    padding: 1%;
+}
+
+.theme-photo-navigation{
+    padding: 1%;
+    text-align: center;
+}
+
+.theme-prev{
+    cursor:pointer;
+    margin-right: 15%;
+}
+
+.theme-back{
+    cursor:pointer;
+    margin-right: 15%;
+}
+
+.theme-next{
+    cursor:pointer;
+}

@@ -1,0 +1,161 @@
+/**
+ * Created with IntelliJ IDEA.
+ * User: srikanths
+ * Date: 3/10/13
+ * Time: 2:16 PM
+ * To change this template use File | Settings | File Templates.
+ */
+
+/*TODO: Need to remove inline style of remove icon*/
+
+var wmTabs = WM.module("wm.widgets.container.tabs", ["ui.bootstrap.tabs"]);
+wmTabs.controllers = {};
+wmTabs.directives = {};
+
+wmTabs.controllers.WMTabsController = ['$scope', "$element", function ($scope, $element) {
+    "use strict";
+    var setAllTabsInactive = function () {
+            WM.forEach($scope.tabs, function (tab) {
+                tab.active = false;
+            });
+        },
+        createNewTab = function () {
+            var id = $scope.tabsCount + 1;
+            $scope.tabs.push({
+                "id": id,
+                "name": "Tab " + id,
+                "content": "",
+                "active": true
+            });
+            $scope.tabsCount += 1;
+        },
+        removeTab = function (tab) {
+            $scope.tabs.splice($scope.tabs.indexOf(tab), 1);
+            $scope.tabsCount -= 1;
+        };
+
+    $scope.addNewTab = function () {
+        setAllTabsInactive();
+        createNewTab();
+        $scope.$broadcast('onTabAdd');
+    };
+
+    $scope.deleteTab = function (tab) {
+        removeTab(tab);
+        $scope.$broadcast('onTabClose');
+    };
+
+    $scope.selectTab = function (tab) {
+        $scope.$broadcast('onTabSelect');
+        setAllTabsInactive();
+        tab.active = true;
+    };
+
+}];
+
+wmTabs.directives.wmTabset = ['$rootScope', 'PropertiesFactory', function ($rootScope, PropertiesFactory) {
+    "use strict";
+    var widgetProps = PropertiesFactory.getPropertiesOf("wm.tabs", ["wm.base", "wm.base.editors", "wm.base.editors.abstracteditors"]);
+
+    return {
+        restrict: 'E',
+        scope: {
+            options: "=",
+            value: "=",
+            onTabSelect: "&",
+            onTabDeselect: "&",
+            onTabAdd: "&",
+            onTabClose: "&"
+        },
+        replace: true,
+        controller: wmTabs.controllers.WMTabsController,
+        template: '<div set-scope-values data-ng-show="show">' +
+            ' <tabset data-ng-style="{width: width, height :height, fontFamily: fontfamily, fontWeight: fontweight,' +
+            ' border: border, borderColor: bordercolor, padding: padding, margin: margin, color: color, textAlign: textalign }">' +
+            ' <wm-tab data-ng-repeat = "tab in tabs"></wm-tab>' +
+            '<tab heading="Add" select="addNewTab();"></tab></tabset></div>',
+        compile: function () {
+            return {
+                pre: function (scope, element, attrs, controller) {
+                    var i, tabObject;
+                    scope.tabs = [];
+                    scope.widgetProps = widgetProps;
+                    if (scope.options) {
+                        scope.tabs = scope.options;
+                        scope.tabsCount = scope.tabs.length;
+                    } else {
+                        scope.tabsCount = 3;
+                        for (i = 1; i <= scope.tabsCount; i += 1) {
+                            tabObject = {};
+                            tabObject.id = i;
+                            tabObject.name = "Tab " + i;
+                            tabObject.content = "";
+                            tabObject.active = false;
+                            scope.tabs.push(tabObject);
+                        }
+                        scope.tabs[0].active = true;
+                    }
+                },
+                post: function (scope, element, attrs, controller) {
+
+                }
+            };
+        },
+        link: function (scope, element, attrs) {
+            scope.tabsCount = 0;
+        }
+    };
+}];
+
+wmTabs.directives.wmTab = ['$rootScope', 'PropertiesFactory', function ($rootScope, PropertiesFactory) {
+    "use strict";
+    var widgetProps = PropertiesFactory.getPropertiesOf("wm.tabs", ["wm.base", "wm.base.editors", "wm.base.editors.abstracteditors"]);
+
+    return {
+        require: '^wmTabset',
+        restrict: 'E',
+        replace: true,
+        template: '<div><tab data-ng-style="{fontSize: fontsize, padding: padding, margin: margin,' +
+            ' color: color, backgroundColor: backgroundcolor, backgroundGradient: backgroundgradient,' +
+            ' backgroundImage: backgroundimage, textAlign: textalign, textDecoration: textdecoration,' +
+            ' fontStyle: fontstyle, whiteSpace: whitespace}"' +
+            ' select="selectTab(tab)"' +
+            ' active="tab.active" id={{tab.id}} bind-basic-events>' +
+            ' <tab-heading style="position: relative">' +
+            ' <span class="wm-tab-head-text">{{tab.name}}</span>' +
+            ' <span data-ng-click="deleteTab(tab)" class="wm-tab-head-close" style="position: absolute;bottom: 12px;left: 38px;">x</span>' +
+            ' </tab-heading>' +
+            ' {{tab.content}}</tab></div>',
+        compile: function () {
+            return {
+                pre: function (scope, element, attrs, controller) {
+                    scope.widgetProps = widgetProps;
+                },
+                post: function (scope, element, attrs, controller) {
+                    scope.$on("onTabAdd", function () {
+                        if (scope.onTabAdd && WM.isFunction(scope.onTabAdd)) {
+                            scope.onTabAdd();
+                        }
+                    });
+
+                    scope.$on("onTabClose", function () {
+                        if (scope.onTabClose && WM.isFunction(scope.onTabClose)) {
+                            scope.onTabClose();
+                        }
+                    });
+
+                    scope.$on("onTabSelect", function () {
+                        if (scope.onTabSelect && WM.isFunction(scope.onTabSelect)) {
+                            scope.onTabSelect();
+                        }
+                    });
+                }
+            };
+        }
+
+    };
+}];
+
+wmTabs.controller(wmTabs.controllers);
+wmTabs.directive(wmTabs.directives);
+

@@ -1,0 +1,1 @@
+Photo Gallery app created in MVC design pattern, using native JavaScript without the use of libraries or frameworks.
